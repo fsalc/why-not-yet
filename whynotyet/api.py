@@ -16,7 +16,7 @@ else:
 def read_root():
     return {"Hello": "World"}
 
-@app.get("/datasets")
+@app.get("/datasets", response_model_exclude_none=True)
 def get_datasets() -> list[Dataset]:
     return dataset_provider.get_datasets()
 
