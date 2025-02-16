@@ -20,15 +20,16 @@ def read_root():
 def get_datasets() -> list[Dataset]:
     return dataset_provider.get_datasets()
 
+# {dataset} is the name of a dataset file (including .csv)
 @app.get("/datasets/{dataset}")
-def get_dataset(dataset: Annotated[str, Path(description="Dataset file name")]) -> Dataset:
+def get_dataset(dataset: Annotated[str, Path(description="Dataset file name (including extension, e.g. nba_2023_2024.csv)")]) -> Dataset:
     try: 
         return dataset_provider.get_dataset(dataset)
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="dataset not found")
 
 class ExplanationRequest(BaseModel):
-    dataset: str = Field(description="Dataset name")
+    dataset: str = Field(description="Dataset file name (including extension, e.g. nba_2023_2024.csv)")
     tuple_id: int = Field(description="Index of tuple in dataset")
     weight_constraints: WeightConstraints
     user_weight_constraints: list[UserWeightConstraint] | None = None
