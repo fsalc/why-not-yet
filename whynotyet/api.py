@@ -27,6 +27,7 @@ def get_dataset(dataset: Annotated[str, Path(description="Dataset file name (inc
 class ExplanationRequest(BaseModel):
     dataset: str = Field(description="Dataset file name (including extension, e.g. nba_2023_2024.csv)")
     tuple_id: int = Field(description="Index of tuple in dataset")
+    k: int = Field(description="Prefix for which we would like the tuple to appear in")
     weight_constraints: WeightConstraints
     user_weight_constraints: list[UserWeightConstraint] | None = None
 

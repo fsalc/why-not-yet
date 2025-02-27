@@ -1,16 +1,25 @@
 from whynotyet.dataset import Dataset, Attribute
 from whynotyet.explanation import ExplanationType, Box, WeightConstraints, UserWeightConstraint, Point
+from pathlib import Path
+import os
+import glob
+
+from whynotyet.whynotyet import Explainer
 
 ################
 ### Datasets ###
 ################
 
+DATA_ROOT = './data'
+
 class DatasetProvider():
     def get_datasets(self) -> list[Dataset]:
-        raise NotImplementedError
+        return [dataset.split('/')[-1] for dataset in glob.glob('./data/*.csv')]
     
-    def get_dataset(self, name: str) -> Dataset:
-        raise NotImplementedError
+    def get_dataset(self, path: str) -> Dataset:
+        name = Path(path).name # sanitize user input dataset name which is used as path
+        path = os.path.join(DATA_ROOT, name)
+        return Dataset(name=name).load(path) 
     
 class MockDatasetProvider():
     def get_datasets(self):
@@ -60,11 +69,13 @@ class MockDatasetProvider():
 ####################
 
 class ExplanationProvider():
-    def explain(self, dataset: Dataset, tuple_id: int, explanation_type: ExplanationType, weight_constraints: WeightConstraints, user_weight_constraints: list[UserWeightConstraint] | None) -> bool | int | Point | Box:
-        raise NotImplementedError
+    def explain(self, dataset: Dataset, tuple_index: int, k: int, explanation_type: ExplanationType, weight_constraints: WeightConstraints, user_weight_constraints: list[UserWeightConstraint] | None) -> bool | int | Point | Box:
+        dataset = dataset.load() # Load data into Dataset in case it has not been already
+        explainer = Explainer(dataset)
+        return explainer.explain(tuple_index, k, explanation_type, weight_constraints, user_weight_constraints)
 
 class MockExplanationProvider(ExplanationProvider):
-    def explain(self, dataset: Dataset, tuple_id: int, explanation_type: ExplanationType, weight_constraints: WeightConstraints, user_weight_constraints: list[UserWeightConstraint] | None) -> bool | int | Point | Box:
+    def explain(self, dataset: Dataset, tuple_index: int, k: int, explanation_type: ExplanationType, weight_constraints: WeightConstraints, user_weight_constraints: list[UserWeightConstraint] | None) -> bool | int | Point | Box:
         if dataset.numeric_attributes is None:
             raise Exception('dataset must be a full dataset and not a stub')
         if explanation_type == ExplanationType.SAT:
