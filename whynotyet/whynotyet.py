@@ -32,7 +32,6 @@ class Explainer():
             for row_index, row in enumerate(self.dataset.rows):
                 if row_index != tuple_index:
                     # First constraint in (3) in the paper
-                    print(0 <= sum((tuple[i] - row[i]) * weights[attr] for i, attr in zip(self.dataset.numeric_indices, self.dataset.numeric_attributes)) + M * (tuple_indicators[row_index]))
                     model.add_linear_constraint(0 <= sum((tuple[i] - row[i]) * weights[attr] for i, attr in zip(self.dataset.numeric_indices, self.dataset.numeric_attributes)) + M * (tuple_indicators[row_index]))
             
             # TRIANGLE weight constraint
