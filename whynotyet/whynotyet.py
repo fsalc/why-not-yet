@@ -25,7 +25,7 @@ class Explainer():
         M = 1e9
         if explanation_type == ExplanationType.BOX:
             return NotImplementedError()
-        else:
+        elif explanation_type in (ExplanationType.SAT, ExplanationType.POINT, ExplanationType.BEST):
             # SAT, BEST, and POINT
             
             # Indicators
