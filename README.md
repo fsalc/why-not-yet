@@ -1,10 +1,10 @@
 # Why-Not-Yet 
 
-This repository holds our implementation of the **Why Not Yet: Fixing a Top-k Ranking that Is Not Fair to Individuals** by Chen et al., in VLDB '23.
+This repository holds our implementation of the **Why Not Yet: Fixing a Top-k Ranking that Is Not Fair to Individuals** by Chen et al., in VLDB '23. It also includes a frontend, presenting users with an interface to interactively fix top-k rankings to their liking using the described algorithms.
 
-Our implementation of their algorithm contains the following:
+Our implementation of their algorithms contains the following:
 * Methods for answering the SAT, BEST, POINT, and BOX problems posed in the paper
-* Solving BOX uses the monotonic core construction described in the paper
+* Solving BOX is approximate, and is done by using the monotonic core construction described in the paper
 * Removes dominators and dominatees from consideration
 * Supports the included upper bound constraints (TRIANGLE, CUBE), as well as user-defined constraints on the weights
 
