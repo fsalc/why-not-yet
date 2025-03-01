@@ -1,6 +1,6 @@
 # Why-Not-Yet 
 
-This repository holds our implementation of the **Why Not Yet: Fixing a Top-k Ranking that Is Not Fair to Individuals** by Chen et al., in VLDB '23. It also includes a frontend, presenting users with an interface to interactively fix top-k rankings to their liking using the described algorithms.
+This repository holds our implementation of the **Why Not Yet: Fixing a Top-k Ranking that Is Not Fair to Individuals** by Chen et al., in VLDB '23. We expose the algorithms fixing these rankings through a REST API, located in the `whynotyet` directory. It also includes a frontend (in the `web` directory), presenting users with an interface to interactively fix top-k rankings to their liking using the described algorithms.
 
 Our implementation of their algorithms contains the following:
 * Methods for answering the SAT, BEST, POINT, and BOX problems posed in the paper
