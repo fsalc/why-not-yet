@@ -3,6 +3,16 @@ from whynotyet.dataset import *
 from typing import Any
 from ortools.math_opt.python import mathopt
 
+def dominates(s, r):
+    '''Returns True if s dominates r -- assumes s and r are numeric arrays of same length'''
+    dominates = False
+    for s_value, r_value in zip(s, r):
+        if s_value < r_value:
+            return False
+        if s_value > r_value:
+            dominates = True # must be also strictly greater in at least one attribute
+    return dominates
+
 class Explainer():
     def __init__(self, dataset: Dataset):
         self.dataset = dataset
@@ -16,8 +26,14 @@ class Explainer():
         rows = self.dataset.rows
         r = rows[tuple_index]
 
+        dominators = []
+        for s_index, s in enumerate(self.dataset.rows):
+            if s_index != tuple_index:
+                if dominates([s[i] for i in self.dataset.numeric_indices], [r[i] for i in self.dataset.numeric_indices]):
+                    dominators.append(s_index)
+                
         model = mathopt.Model()
-        tuple_indicators = [model.add_integer_variable(lb=0, ub=1, name=f"{i}_is_better") for i in range(len(rows))] # TODO: don't need to create indicator for explained tuple
+        tuple_indicators = [model.add_integer_variable(lb=0, ub=1, name=f"{i}_is_better") for i in range(len(rows))] # TODO: don't need to create indicator for explained tuple or dominators
 
         
         #TODO choose M to be smaller (but sufficiently large as required)
@@ -35,14 +51,15 @@ class Explainer():
             
             # Indicators using monotonic core
             for s_index, s in enumerate(self.dataset.rows):
-                if s_index != tuple_index:
+                if s_index != tuple_index and s_index not in dominators:
                     # Find monotonic core
                     c = {attr: h[attr] if rows[s_index][i] >= r[i] else l[attr] for i, attr in zip(self.dataset.numeric_indices, self.dataset.numeric_attributes)}
                     model.add_linear_constraint(0 <= sum((r[i] - s[i]) * c[attr] for i, attr in zip(self.dataset.numeric_indices, self.dataset.numeric_attributes)) + M * (tuple_indicators[s_index]))
     
             # Objectives
-            model.add_linear_constraint(sum(tuple_indicator for tuple_indicator in tuple_indicators) <= k - 1)
+            model.add_linear_constraint(sum(tuple_indicator for tuple_indicator in tuple_indicators) + len(dominators) <= k - 1)
             model.maximize(sum(h[attr] - l[attr] for attr in self.dataset.numeric_attributes))
+            
         elif explanation_type in (ExplanationType.SAT, ExplanationType.POINT, ExplanationType.BEST):
             weights = {attr: model.add_variable(lb=0, ub=1, name=f"weight_{attr}") for attr in self.dataset.numeric_attributes}
             # TRIANGLE weight constraint
@@ -51,15 +68,15 @@ class Explainer():
             
             # Indicators
             for s_index, s in enumerate(self.dataset.rows):
-                if s_index != tuple_index:
+                if s_index != tuple_index and s_index not in dominators:
                     # First constraint in (3) in the paper
                     model.add_linear_constraint(0 <= sum((r[i] - s[i]) * weights[attr] for i, attr in zip(self.dataset.numeric_indices, self.dataset.numeric_attributes)) + M * (tuple_indicators[s_index]))
         
             # Objectives
             if explanation_type != ExplanationType.BEST:
-                model.add_linear_constraint(sum(tuple_indicator for tuple_indicator in tuple_indicators) <= k - 1)
+                model.add_linear_constraint(sum(tuple_indicator for tuple_indicator in tuple_indicators) + len(dominators) <= k - 1)
             else:
-                model.minimize(sum(tuple_indicator for tuple_indicator in tuple_indicators) + 1)
+                model.minimize(sum(tuple_indicator for tuple_indicator in tuple_indicators) + len(dominators) + 1)
 
         # params = mathopt.SolveParameters(enable_output=True)
         result = mathopt.solve(model, mathopt.SolverType.GSCIP)
