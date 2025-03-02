@@ -3,6 +3,8 @@ from whynotyet.dataset import *
 from typing import Any
 from ortools.math_opt.python import mathopt
 
+EPS = 1e-5
+
 def dominates(s, r):
     '''Returns True if s dominates r -- assumes s and r are numeric arrays of same length'''
     dominates = False
@@ -46,9 +48,15 @@ class Explainer():
             # First constraint in (7)
             for attr in self.dataset.numeric_attributes:
                 model.add_linear_constraint(l[attr] <= h[attr])
-            # TRIANGLE weight constraint
-            # TODO: support others
-            model.add_linear_constraint(sum(h_attr for h_attr in h.values()) == 1)
+            if weight_constraints == WeightConstraints.TRIANGLE:
+                model.add_linear_constraint(sum(h_attr for h_attr in h.values()) == 1)
+            elif weight_constraints == WeightConstraints.CUBE:
+                # We already assume weights are at most 1, just need to make sure their sum is at least eps (for eps > 0)
+                model.add_linear_constraint(sum(h_attr for h_attr in h.values()) >= EPS)
+            
+            for user_weight_constraint in user_weight_constraints or []:
+                model.add_linear_constraint(l[user_weight_constraint.attribute] >= user_weight_constraint.lower_bound)
+                model.add_linear_constraint(h[user_weight_constraint.attribute] <= user_weight_constraint.upper_bound)
             
             # Indicators using monotonic core
             for s_index, s in enumerate(self.dataset.rows):
@@ -58,14 +66,21 @@ class Explainer():
                     model.add_linear_constraint(0 <= sum((r[i] - s[i]) * c[attr] for i, attr in zip(self.dataset.numeric_indices, self.dataset.numeric_attributes)) + M * (tuple_indicators[s_index]))
     
             # Objectives
-            model.add_linear_constraint(sum(tuple_indicator for tuple_indicator in tuple_indicators.values()) + len(dominators) <= k - 1)
+            if tuple_indicators: # constant <= constant not supported by ortools, so we need to stop if tuple_indicators is empty (e.g. when all others are dominators/dominatees)
+                model.add_linear_constraint(sum(tuple_indicator for tuple_indicator in tuple_indicators.values()) + len(dominators) <= k - 1)
             model.maximize(sum(h[attr] - l[attr] for attr in self.dataset.numeric_attributes))
             
         elif explanation_type in (ExplanationType.SAT, ExplanationType.POINT, ExplanationType.BEST):
             weights = {attr: model.add_variable(lb=0, ub=1, name=f"weight_{attr}") for attr in self.dataset.numeric_attributes}
-            # TRIANGLE weight constraint
-            # TODO: support others
-            model.add_linear_constraint(sum(weight for weight in weights.values()) == 1)
+            if weight_constraints == WeightConstraints.TRIANGLE:
+                model.add_linear_constraint(sum(weight for weight in weights.values()) == 1)
+            elif weight_constraints == WeightConstraints.CUBE:
+                # We already assume weights are at most 1, just need to make sure their sum is at least eps (for eps > 0)
+                model.add_linear_constraint(sum(weight for weight in weights.values()) >= EPS)
+            
+            for user_weight_constraint in user_weight_constraints or []:
+                model.add_linear_constraint(weights[user_weight_constraint.attribute] >= user_weight_constraint.lower_bound)
+                model.add_linear_constraint(weights[user_weight_constraint.attribute] <= user_weight_constraint.upper_bound)
             
             # Indicators
             for s_index, s in enumerate(self.dataset.rows):
@@ -74,7 +89,7 @@ class Explainer():
                     model.add_linear_constraint(0 <= sum((r[i] - s[i]) * weights[attr] for i, attr in zip(self.dataset.numeric_indices, self.dataset.numeric_attributes)) + M * (tuple_indicators[s_index]))
         
             # Objectives
-            if explanation_type != ExplanationType.BEST:
+            if explanation_type != ExplanationType.BEST and tuple_indicators: # constant <= constant not supported by ortools, so we need to stop if tuple_indicators is empty (e.g. when all others are dominators/dominatees)
                 model.add_linear_constraint(sum(tuple_indicator for tuple_indicator in tuple_indicators.values()) + len(dominators) <= k - 1)
             else:
                 model.minimize(sum(tuple_indicator for tuple_indicator in tuple_indicators.values()) + len(dominators) + 1)

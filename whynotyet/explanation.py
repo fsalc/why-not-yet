@@ -11,7 +11,7 @@ class Point(BaseModel):
     coordinates: list[float] = Field(description="Coordinates are in order of appeareance of the numeric attributes in original dataset")
 
 class WeightConstraints(str, Enum):
-    BOX = "box"
+    CUBE = "cube"
     TRIANGLE = "triangle"
     
 class Box(BaseModel):
