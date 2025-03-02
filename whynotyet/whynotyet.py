@@ -63,11 +63,11 @@ class Explainer():
                 if s_index != tuple_index and s_index not in dominators and s_index not in dominatees:
                     # Find monotonic core
                     c = {attr: h[attr] if rows[s_index][i] >= r[i] else l[attr] for i, attr in zip(self.dataset.numeric_indices, self.dataset.numeric_attributes)}
-                    model.add_linear_constraint(0 <= sum((r[i] - s[i]) * c[attr] for i, attr in zip(self.dataset.numeric_indices, self.dataset.numeric_attributes)) + M * (tuple_indicators[s_index]))
+                    model.add_linear_constraint(0 <= sum((r[i] - s[i]) * c[attr] for i, attr in zip(self.dataset.numeric_indices, self.dataset.numeric_attributes)) + M * (1 - tuple_indicators[s_index]))
     
             # Objectives
             if tuple_indicators: # constant <= constant not supported by ortools, so we need to stop if tuple_indicators is empty (e.g. when all others are dominators/dominatees)
-                model.add_linear_constraint(sum(tuple_indicator for tuple_indicator in tuple_indicators.values()) + len(dominators) <= k - 1)
+                model.add_linear_constraint(sum(tuple_indicator for tuple_indicator in tuple_indicators.values()) + len(dominatees) >= len(self.dataset.rows) - k)
             model.maximize(sum(h[attr] - l[attr] for attr in self.dataset.numeric_attributes))
             
         elif explanation_type in (ExplanationType.SAT, ExplanationType.POINT, ExplanationType.BEST):
