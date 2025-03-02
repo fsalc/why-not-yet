@@ -69,13 +69,13 @@ class MockDatasetProvider():
 ####################
 
 class ExplanationProvider():
-    def explain(self, dataset: Dataset, tuple_index: int, k: int, explanation_type: ExplanationType, weight_constraints: WeightConstraints, user_weight_constraints: list[UserWeightConstraint] | None) -> bool | int | Point | Box:
-        dataset = dataset.load() # Load data into Dataset in case it has not been already
+    def explain(self, dataset: Dataset, tuple_id: int, k: int, explanation_type: ExplanationType, weight_constraints: WeightConstraints, user_weight_constraints: list[UserWeightConstraint] | None) -> bool | int | Point | Box:
+        dataset = dataset.load(f"data/{dataset.name}") # Load data into Dataset in case it has not been already
         explainer = Explainer(dataset)
-        return explainer.explain(tuple_index, k, explanation_type, weight_constraints, user_weight_constraints)
+        return explainer.explain(tuple_id, k, explanation_type, weight_constraints, user_weight_constraints)
 
 class MockExplanationProvider(ExplanationProvider):
-    def explain(self, dataset: Dataset, tuple_index: int, k: int, explanation_type: ExplanationType, weight_constraints: WeightConstraints, user_weight_constraints: list[UserWeightConstraint] | None) -> bool | int | Point | Box:
+    def explain(self, dataset: Dataset, tuple_id: int, k: int, explanation_type: ExplanationType, weight_constraints: WeightConstraints, user_weight_constraints: list[UserWeightConstraint] | None) -> bool | int | Point | Box:
         if dataset.numeric_attributes is None:
             raise Exception('dataset must be a full dataset and not a stub')
         if explanation_type == ExplanationType.SAT:
