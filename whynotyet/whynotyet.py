@@ -37,7 +37,7 @@ class Explainer():
                     dominatees.append(s_index)
                 
         model = mathopt.Model()
-        tuple_indicators = {i: model.add_integer_variable(lb=0, ub=1, name=f"{i}_is_better") for i in range(len(rows)) if i != tuple_index and i not in dominators and i not in dominatees} # TODO: don't need to create indicator for explained tuple or dominators
+        tuple_indicators = {i: model.add_integer_variable(lb=0, ub=1, name=f"{i}_is_better") for i in range(len(rows)) if i != tuple_index and i not in dominators and i not in dominatees}
         
         #TODO choose M to be smaller (but sufficiently large as required)
         M = 1e9
