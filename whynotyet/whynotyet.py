@@ -55,8 +55,8 @@ class Explainer():
                 model.add_linear_constraint(sum(h_attr for h_attr in h.values()) >= EPS)
             
             for user_weight_constraint in user_weight_constraints or []:
-                model.add_linear_constraint(l[user_weight_constraint.attribute] >= user_weight_constraint.lower_bound)
-                model.add_linear_constraint(h[user_weight_constraint.attribute] <= user_weight_constraint.upper_bound)
+                model.add_linear_constraint(l[user_weight_constraint['attribute']] >= user_weight_constraint['lower_bound'])
+                model.add_linear_constraint(h[user_weight_constraint['attribute']] <= user_weight_constraint['upper_bound'])
             
             # Indicators using monotonic core
             for s_index, s in enumerate(self.dataset.rows):
@@ -79,8 +79,8 @@ class Explainer():
                 model.add_linear_constraint(sum(weight for weight in weights.values()) >= EPS)
             
             for user_weight_constraint in user_weight_constraints or []:
-                model.add_linear_constraint(weights[user_weight_constraint.attribute] >= user_weight_constraint.lower_bound)
-                model.add_linear_constraint(weights[user_weight_constraint.attribute] <= user_weight_constraint.upper_bound)
+                model.add_linear_constraint(weights[user_weight_constraint['attribute']] >= user_weight_constraint['lower_bound'])
+                model.add_linear_constraint(weights[user_weight_constraint['attribute']] <= user_weight_constraint['upper_bound'])
             
             # Indicators
             for s_index, s in enumerate(self.dataset.rows):

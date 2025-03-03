@@ -30,11 +30,8 @@ HeaderNavBar {
     padding: 10px;
 }
 
-.form-constraints-control-short {
-    width: 10%;
-}
-.form-conditions-control-short {
-    width: 10%;
+.form-conditions-control{
+    width: 20%;
 }
 .form-conditions-control-very-short {
     width: 5%;
