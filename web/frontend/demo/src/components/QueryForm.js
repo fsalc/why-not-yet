@@ -94,13 +94,13 @@ function QueryForm({
         setUserWeightConstraints(data);
     }
 
-    const sendSatRequest = async () => {
+    const sendSatRequest = async (tuple_id) => {
         await fetch('http://127.0.0.1:8000/explain/sat', {
                 method: 'POST',
                 body: JSON.stringify(
                     {
                       "dataset": table,
-                      "tuple_id": selectedTuple,
+                      "tuple_id": tuple_id,
                       "k": k,
                       "weight_constraints": weightConstraintsType,
                       "user_weight_constraints": prepareUserWeightConstraints()
@@ -114,13 +114,13 @@ function QueryForm({
                     console.log("SAT ANSWER: " + response)
         });
     }
-    const sendBestRequest = async () => {
+    const sendBestRequest = async (tuple_id) => {
         await fetch('http://127.0.0.1:8000/explain/best', {
                 method: 'POST',
                 body: JSON.stringify(
                     {
                       "dataset": table,
-                      "tuple_id": selectedTuple,
+                      "tuple_id": tuple_id,
                       "k": k,
                       "weight_constraints": weightConstraintsType,
                       "user_weight_constraints": prepareUserWeightConstraints()
@@ -139,13 +139,13 @@ function QueryForm({
         return DBPreview.attributes.filter(attr => attr.numeric).map(attr => attr.name);
     }
 
-    const sendPointRequest = async () => {
+    const sendPointRequest = async (tuple_id) => {
         await fetch('http://127.0.0.1:8000/explain/point', {
                 method: 'POST',
                 body: JSON.stringify(
                     {
                       "dataset": table,
-                      "tuple_id": selectedTuple,
+                      "tuple_id": tuple_id,
                       "k": k,
                       "weight_constraints": weightConstraintsType,
                       "user_weight_constraints": prepareUserWeightConstraints()
@@ -169,13 +169,13 @@ function QueryForm({
             console.log( config);
             })};
 
-    const sendBoxRequest = async () => {
+    const sendBoxRequest = async (tuple_id) => {
         await fetch('http://127.0.0.1:8000/explain/box', {
                 method: 'POST',
                 body: JSON.stringify(
                     {
                       "dataset": table,
-                      "tuple_id": selectedTuple,
+                      "tuple_id": tuple_id,
                       "k": k,
                       "weight_constraints": weightConstraintsType,
                       "user_weight_constraints": prepareUserWeightConstraints()
@@ -191,18 +191,19 @@ function QueryForm({
         })};
 
 
-    const sendRequests = async () => {
-        await sendSatRequest();
+    const sendRequests = async (tuple_id) => {
+        await sendSatRequest(tuple_id);
         if(satAns !== false){
-            await sendPointRequest();
+            await sendPointRequest(tuple_id);
         }
-        await sendBestRequest();
-        await sendBoxRequest();
+        await sendBestRequest(tuple_id);
+        await sendBoxRequest(tuple_id);
     }
 
     const onClickSelectedTuple = async (i) => {
-        setSelectedTuple(i);
-        await sendRequests();
+        console.log('tuple id '+ i);
+        await setSelectedTuple(i);
+        await sendRequests(i);
     }
 
 
