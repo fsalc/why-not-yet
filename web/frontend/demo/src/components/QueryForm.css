@@ -18,6 +18,11 @@ HeaderNavBar {
     width: 500px !important;
 }
 
+hr {
+    border-top: 3px dashed #1e0bce !important;
+}
+
+
 .col-sm-3{
     max-width: 100% !important;
 }
@@ -38,6 +43,14 @@ HeaderNavBar {
 }
 .form-constraints-control-very-short {
     width: 5%;
+}
+
+.instructions {
+    font-family: 'Font Awesome 6 Pro', 'Font Awesome 6 Free', fantasy !important;
+}
+
+.QueryForm {
+    font-family: "Verdana", "Tahoma", Sans-Serif, system-ui;
 }
 
 .form-constraints-control-long {

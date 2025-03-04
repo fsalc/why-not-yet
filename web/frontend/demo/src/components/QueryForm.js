@@ -78,6 +78,7 @@ function QueryForm({
     const [userWeightConstraints, setUserWeightConstraints] = useState([
         {attribute: '', lower_bound: '', upper_bound: ''}
     ]);
+    const [selectedBoxVisualization, setSelectedBoxVisualization] = useState("Bar Chart");
 
     const ref = useRef();
 
@@ -254,8 +255,13 @@ function QueryForm({
         await sendDBPreviewRequest(event);
     }
 
+    const handleKSelection = async (event) => {
+        setK(event);
+    }
+
     const optionalDBs = ["csrankings.csv", "nba_2023_2024.csv"];
-    const optionalWeightConstraintsType = ["triangle","cube"]
+    const optionalWeightConstraintsType = ["triangle","cube"];
+    const optionalBoxVisualizations = ["Bar Chart","2D Rectangles"];
     // const setOptionalDBs = async () => {
     //     await fetch('http://127.0.0.1:8000/datasets', {method: 'GET', headers: {
     //                 Accept: 'application/json',
@@ -275,14 +281,16 @@ function QueryForm({
         <div className="QueryRefinement">
             <div className="QueryForm">
                 <Container>
-                    <h5>Please follow the instructions:</h5>
+                    <h5 className={"instructions"}><b>Welcome to Why-Not-Yet Demo!</b><br/><br/>
+                        Please follow the instructions below:<br/>
+                        <font color={'#4c0bce'}><b>- - - - - - - - - - - - - - - - - - - - - - - -</b></font></h5><br/>
                     <Row>
                         <Col sm={7}>
                             <Form onSubmit={()=>{}}>
                                 <Form.Group as={Row} className="mb3">
                                     <Row>
                                         <Col xs={20}>
-                                            <Form.Label htmlFor="Select">1. Select The DB you want to work with</Form.Label>
+                                            <Form.Label htmlFor="Select">1. <u> Select The DB you want to work with</u></Form.Label>
                                         </Col>
 
                                         <Col xs={8}>
@@ -300,18 +308,19 @@ function QueryForm({
                                 <br/><br/>
                                 <Form.Group as={Row} className="mb3">
 
-                                    <Form.Label htmlFor="Select">2. Add weight constraints</Form.Label>
+                                    <Form.Label htmlFor="Select">2. <u>Add weight constraints</u></Form.Label>
                                     <Col xs={20}>
                                         Weight Constraints Type:
-                                <Select id="weight-constraints-type-select" className="weight-constraints-type-select"
-                                                    options={optionalWeightConstraintsType.map((o) => {
-                                                        return {value: o, label: o}
-                                                    })}
-                                                    onChange={setWeightConstraintsType} defaultValue={weightConstraintsType}
-                                            >
-                                            </Select>
-                                    <br/>
-                            </Col>
+                                        <Select id="weight-constraints-type-select"
+                                                className="weight-constraints-type-select"
+                                                options={optionalWeightConstraintsType.map((o) => {
+                                                    return {value: o, label: o}
+                                                })}
+                                                onChange={setWeightConstraintsType} defaultValue={weightConstraintsType}
+                                        >
+                                        </Select>
+                                        <br/><br/>
+                                    </Col>
                                     {userWeightConstraints.map((form, index) => {
                                         return (
                                             <MDBInputGroup key={index} className='mb-3'>
@@ -365,16 +374,15 @@ function QueryForm({
                             </Form>
                         </Col>
                         <Row>
-                            <br/><br/>
                             <Col xs={5}>
-                                <Form.Label htmlFor="Select">3. Select K</Form.Label>
+                                <br/><Form.Label htmlFor="Select">3. <u>Select K</u></Form.Label>
                             </Col>
                         </Row>
                         <Row>
                         <Col xs={5}>
-                                <select onChange={setK} defaultValue={k}>
+                                <select onChange={handleKSelection} defaultValue={k}>
                                     {
-                                        [...Array(DBPreview.rows != undefined ? DBPreview.rows.length : 10)].map((_, i) => i + 1)
+                                        [...Array(DBPreview.rows !== undefined ? DBPreview.rows.length : 10)].map((_, i) => i + 1)
                                             .map(i => <option key={i} value={i}>{i}</option>)
                                     }
                                 </select>
@@ -383,7 +391,7 @@ function QueryForm({
                         <Row>
                             <Col>
                                 <br/>
-                                4. Select a tuple from the data (The selected tuple is: {selectedTuple})
+                                4. <u>Select a tuple from the data (The selected tuple is: {selectedTuple})</u>
                                 <br/><br/>
                             </Col>
                         </Row>
@@ -411,82 +419,164 @@ function QueryForm({
                     </Row>
                 </Container>
                 <Container>
+                    <br/>
+                    <hr/>
+                    <br/>
+                    <h5 className={"instructions"}>
+                        <u>The Why-Not-Yet Results:</u>
+                    </h5>
+                    <br/>
                     <Row>
-                        {satAns !== undefined ? "SAT ANSWER: " + (satAns ? "True" : "False") : "No SAT Answer received"}
+                        <div className={"frame"}>
+                            1. <u> The SAT Query </u><br/>
+                            Does there exist a weight vector W such that t ranks among the top-k for some ranking
+                            function?
+                            <br/>
+                            <p style={{"text-indent": "50px"}}>
+                                {satAns !== undefined ?
+                                    "Answer: " + (satAns ? "Yes! :)" : "No... :(") :
+                                    "Answer: No SAT Query answer received"}
+                            </p>
+                            <br/>
+                        </div>
+                        <div className={"frame"}>
+                            2. <u> The BEST Query </u><br/>
+                            What is the best rank that t can reach for any scoring function?
+                            <br/>
+                            <p style={{"text-indent": "50px"}}>
+                                {bestAns !== undefined ?
+                                    "Answer: " + (bestAns === true ? 1 : bestAns) :
+                                    "Answer: No BEST Query answer received"}
+                            </p>
+                            <br/>
+                        </div>
+                    </Row>
+                    <Row>
+                        <div className={"frame"}>
+                            3. <u> The POINT Query </u><br/>
+                            Return a weight vector W such that t ranks among the top-k.
+                            <br/>
+                            <p style={{"text-indent": "50px"}}>
+                                {bestAns !== undefined ?
+                                    "Answer: " + pointAns.datasets[0].data :
+                                    "Answer: No POINT Query answer received"}
+                            </p>
+                            {pointAns !== undefined ?
+                            <div className={"doughnut"}><Doughnut redraw={true} data={pointAns}/></div> : ''}
+                        </div>
                         <br/>
-                        {bestAns !== undefined ? "BEST ANSWER: " + bestAns : "No BEST Answer received"}
                         <br/>
                     </Row>
                     <Row>
-                        <br/>
-                        {pointAns !== undefined ? "POINT ANSWER: " + pointAns.datasets[0].data : "No POINT Answer received"}
-                        {pointAns !== undefined ? <div className={"doughnut"}> <Doughnut redraw={true} data={pointAns} /></div>: ''}
-
-                        <br/>
-                    </Row>
-                    <Row>
-                        {boxAns !== undefined ? "BOX ANSWER: BottomLeft - " + boxAns.bottom_left.coordinates + "    TopRight - " + boxAns.top_right.coordinates : "No BOX Answer received"}
-                        {boxAns !== undefined ?
-                            <div>
-                                <Col xs={8}>
-                                            x:<Select id="box-attr-number-1" className="box-attr-number"
-                                                    defaultValue={0}
-                                                    options={getNumericAttrs().map((o, i) => {
-                                                        return {value: i, label: o}
-                                                    })}
-                                                    onChange={setBoxAttrNumber1}
-                                            >
-                                            </Select>
-                                    <br/>y:<Select id="box-attr-number-2" className="box-attr-number"
-                                                    defaultValue={1}
-                                                    options={getNumericAttrs().map((o, i) => {
-                                                        return {value: i, label: o}
-                                                    })}
-                                                    onChange={setBoxAttrNumber2}
-                                            ></Select>
-                                        </Col>
-                                <Chart id={'hello'}
-                                   ref={ref}
-                                       redraw={true}
-                                   data={{labels: [...Array(Math.ceil(boxAns.top_right.coordinates[boxAttrNumber1] * 1.1)+1).keys()], datasets: [{
-                                          fill: false,
-                                          borderColor: 'rgb(75, 192, 192)',
-                                          tension: 0.1
-                                        }]}}
-                                   type={'line'}
-                                   options={{
-                                       scales: {
-                                           x: {
-                                               title: {
-                                                    display: true,
-                                                    text: getNumericAttrs()[boxAttrNumber1]
-                                                }
-                                           },
-                                            y: {
-                                                title: {
-                                                    display: true,
-                                                    text: getNumericAttrs()[boxAttrNumber2]
-                                                },
-                                                max: Math.ceil(boxAns.top_right.coordinates[boxAttrNumber2] * 1.1)+1
-                                            }
-                                          },
-                                      plugins: {
-                                        annotation: {
-                                          annotations: {
-                                            box1: {
-                                                type: 'box',
-                                                xMin: boxAns.bottom_left.coordinates[boxAttrNumber1],
-                                                xMax: boxAns.top_right.coordinates[boxAttrNumber1],
-                                                yMin: boxAns.bottom_left.coordinates[boxAttrNumber2],
-                                                yMax: boxAns.top_right.coordinates[boxAttrNumber2],
-                                                backgroundColor: 'rgba(255, 99, 132, 0.25)',
-                                                borderWidth: 1
-                                            }
-                                          }
-                                        }
-                                      }
-                                    }}/>
-                            </div>: "No BOX Answer received"}
+                        <div className={"frame"}>
+                            4. <u> The BOX Query </u><br/>
+                            Return the inner box B with the largest volume such that t ranks among the top-k.
+                            <br/>
+                            <p style={{"text-indent": "50px"}}>
+                                {boxAns !== undefined ?
+                                    "Answer: Bottom left point - " + boxAns.bottom_left.coordinates + ",  Top right point - " + boxAns.top_right.coordinates:
+                                    "Answer: No BOX Query answer received"}
+                            </p>
+                            {boxAns !== undefined ?
+                                <div>
+                                    {
+                                        optionalBoxVisualizations.map(item =>
+                                            <div className="radio">
+                                                <label>
+                                                    <input type="radio" value={item} onClick={(e) => setSelectedBoxVisualization(e.target.value)} checked={selectedBoxVisualization === item}/>
+                                                    {item}
+                                                </label>
+                                            </div>
+                                        )
+                                    }
+                                </div>
+                                : ''}
+                            {boxAns !== undefined && selectedBoxVisualization === '2D Rectangles' ?
+                                <div>
+                                    <Col xs={8}>
+                                        x:<Select id="box-attr-number-1" className="box-attr-number"
+                                                  defaultValue={0}
+                                                  options={getNumericAttrs().map((o, i) => {
+                                                      return {value: i, label: o}
+                                                  })}
+                                                  onChange={setBoxAttrNumber1}
+                                    >
+                                    </Select>
+                                        <br/>y:<Select id="box-attr-number-2" className="box-attr-number"
+                                                       defaultValue={1}
+                                                       options={getNumericAttrs().map((o, i) => {
+                                                           return {value: i, label: o}
+                                                       })}
+                                                       onChange={setBoxAttrNumber2}
+                                    ></Select>
+                                    </Col>
+                                    <Chart id={'hello'}
+                                           ref={ref}
+                                           redraw={true}
+                                           data={{
+                                               labels: [...Array(Math.ceil(boxAns.top_right.coordinates[boxAttrNumber1] * 1.1) + 1).keys()],
+                                               datasets: [{
+                                                   fill: false,
+                                                   borderColor: 'rgb(75, 192, 192)',
+                                                   tension: 0.1
+                                               }]
+                                           }}
+                                           type={'line'}
+                                           options={{
+                                               scales: {
+                                                   x: {
+                                                       title: {
+                                                           display: true,
+                                                           text: getNumericAttrs()[boxAttrNumber1]
+                                                       }
+                                                   },
+                                                   y: {
+                                                       title: {
+                                                           display: true,
+                                                           text: getNumericAttrs()[boxAttrNumber2]
+                                                       },
+                                                       max: Math.ceil(boxAns.top_right.coordinates[boxAttrNumber2] * 1.1) + 1
+                                                   }
+                                               },
+                                               plugins: {
+                                                   annotation: {
+                                                       annotations: {
+                                                           box1: {
+                                                               type: 'box',
+                                                               xMin: boxAns.bottom_left.coordinates[boxAttrNumber1],
+                                                               xMax: boxAns.top_right.coordinates[boxAttrNumber1],
+                                                               yMin: boxAns.bottom_left.coordinates[boxAttrNumber2],
+                                                               yMax: boxAns.top_right.coordinates[boxAttrNumber2],
+                                                               backgroundColor: 'rgba(255, 99, 132, 0.25)',
+                                                               borderWidth: 1
+                                                           }
+                                                       }
+                                                   }
+                                               }
+                                           }}/>
+                                </div> : ''}
+                            {boxAns !== undefined && selectedBoxVisualization === 'Bar Chart' ?
+                                <Chart id={'hilo'}
+                                           redraw={true}
+                                           data={{
+                                               labels: getNumericAttrs(),
+                                               datasets: [{
+                                                   data: Array.from(getNumericAttrs().keys().map((i) => [boxAns.bottom_left.coordinates[i], boxAns.top_right.coordinates[i]])),
+                                                   fill: false,
+                                                   borderColor: 'rgb(75, 192, 192)',
+                                                   tension: 0.1
+                                               }]
+                                           }}
+                                           type={'bar'}
+                                           options={{
+                                               scales: {
+                                                   y: {
+                                                       max: Math.ceil(Math.max(boxAns.top_right.coordinates))
+                                                   }
+                                               }
+                                           }}/> : ''
+                            }
+                        </div>
                     </Row>
                 </Container>
 
